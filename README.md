@@ -90,7 +90,7 @@ python inference.py \
 --seed 42 \
 ```
 
-# Run run.sh 
+## Run run.sh 
 ```
 bash run.sh ./download/context.json ./download/test.json ./result.csv
 ```
