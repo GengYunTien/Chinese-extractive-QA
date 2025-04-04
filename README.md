@@ -1,20 +1,31 @@
 # Chinese-extractive-QA
 ### Task Description - Chinese Extractive Question Answering
-The model training process is divided into two stages. In the first stage, the model selects the most relevant paragraph from four given paragraphs based on the question. In the second stage, the model predicts the answer to the question from the selected paragraph.
-## Download model, data and tokenizers
+This repository implements a two-stage Chinese extractive question answering (QA) system:
+1. **Paragraph Selection**: Given a question and multiple paragraphs, a multiple-choice model determines which paragraph is most relevant.
+2. **Span Selection**: Once the correct paragraph is selected, an extractive QA model identifies the start and end positions of the answer span within that paragraph.
+![image](./imgs/task_description.png)
+## Kaggle competition results
+Evaluation metrics: **Exact Match (EM)**
+|               | Score        | Rank     |
+|---------------|--------------|----------|
+| Public Score  | **0.78128**  | Top 62%  |
+| Private Score | **0.81075**  | Top 26%  |
+## Data 
+Data can be downloaded on [Kaggle](https://www.kaggle.com/t/d8fef9a83a014314be430117cfe5557e).
+## Model Weights
+This project uses pre-trained language models from Hugging Face as the backbone for fine-tuning:  
+* `paragraph-selection`: [hfl/chinese-bert-wwm-ext](https://huggingface.co/hfl/chinese-bert-wwm-ext)  
+* `span-selection (model1)`: [hfl/chinese-lert-large](https://huggingface.co/hfl/chinese-lert-large)  
+* `span-selection (model2)`: [hfl/chinese-macbert-large](https://huggingface.co/hfl/chinese-macbert-large)  
+All models were downloaded from Hugging Face Hub and further fine-tuned on the competition dataset.  
+The fine-tuned model weights are available via [Google Drive](https://drive.google.com/file/d/16Or96aFxP2rQiIs70bZKVe-3UBbnKIN5/view?usp=share_link).
 ```
-cd r11945043
-bash download.sh
-```
-## Script
-```
-./r11945043
-├── download
-│   ├── paragraphSelection
+├── saved_model
+│   ├── paragraph-selection
 │   │   ├── config.json
 │   │   ├── model.safetensors
 │   │   └── tokenizer.json
-│   ├── questionAnswering
+│   ├── span-selection
 │   │   ├── model1
 │   │   │   ├── config.json
 │   │   │   ├── model.safetensors
@@ -23,74 +34,37 @@ bash download.sh
 │   │   │   ├── config.json
 │   │   │   ├── model.safetensors
 │   │   │   └── tokenizer.json
-│   ├── context.json
-│   ├── train.json
-│   ├── valid.json
-│   └── test.json
-├── README.md
-├── run.sh
-├── download.sh
-├── report.pdf
-├── paragraphSelection.py
-├── questionAnswering_1.py
-├── questionAnswering_2.py
-└── inference.py
 ```
-
-## Stage 1 Training: Paragraph selection
-* Create output_dir
+## Stage 1: Paragraph Selection
 ```
-mkdir paragraphSelection
+# Run training & validation
+python train_paragraph_selection.py \
+--context_file '/path/to/context.json' \
+--train_file '/path/to/train.json' \
+--validation_file '/path/to//valid.json' \
+--model_name_or_path '/path/to/hfl--chinese-bert-wwm-ext' \
+--output_dir '/path/to/save/final/model' \
 ```
-* Pre-trained model: hfl/chinese-bert-wwm-ext
+## Stage 2: Span Selection (Ensemble)
+To improve performance, two fine-tuned models are used in ensemble.  
+Answer spans are predicted by both models and ensembled during inference.
 ```
-python paragraphSelection.py \
---context_file './download/context.json' \
---train_file './download/train.json' \
---validation_file './download/valid.json' \
---model_name_or_path './huggingface/hfl--chinese-bert-wwm-ext' \
---output_dir './paragraphSelection' \
---seed 42 \
+# Run training & validation
+python train_span_selection.py \
+--context_file '/path/to/context.json' \
+--train_file '/path/to/train.json' \
+--validation_file '/path/to//valid.json' \
+--model_name_or_path '/path/to/hfl--chinese-lert-large/or/hfl--chinese-macbert-large' \
+--output_dir '/path/to/save/final/model' \
 ```
-## Stage 2 Training: Question answering
-For improve performance, two pre-trained model were used to implement ensemble method. plot figure function was included in the `questionAnswering_1.py` and `questionAnswering_2.py`
-* Create output_dir
+## Inference
 ```
-mkdir -p questionAnswering/{model1,model2}
-```
-* Pre-trained model1: hfl/chinese-lert-large
-```
-python questionAnswering_1.py \
---context_file './download/context.json' \
---train_file './download/train.json' \
---validation_file './download/valid.json' \
---model_name_or_path './huggingface/hfl--chinese-lert-large' \
---output_dir './questionAnswering/model1' \
---seed 42 \
-```
-* Pre-trained model2: hfl/chinese-macbert-large
-```
-python model2.py \
---context_file './download/context.json' \
---train_file './download/train.json' \
---validation_file './download/valid.json' \
---model_name_or_path './huggingface/hfl--chinese-macbert-large' \
---output_dir './questionAnswering/model2' \
---seed 42 \
-```
-## Testing
-```
+# Run full inference pipeline
 python inference.py \
---context_file './download/context.json' \
---test_file './download/test.json' \
---PS_model_path './paragraphSelection' \
---QA_model1_path './questionAnswering/model1' \
---QA_model2_path '/questionAnswering/model2' \
---output_file './result.csv' \
---seed 42 \
-```
-
-# Run run.sh 
-```
-bash run.sh ./download/context.json ./download/test.json ./result.csv
+--context_file '/path/to/context.json' \
+--test_file '/path/to/test.json' \
+--PS_model_path '/path/to/paragraph/selection/model/weights' \
+--QA_model1_path '/path/to/span/selection/model1/weights' \
+--QA_model2_path '/path/to/span/selection/model2/weights' \
+--output_file '/path/to/save/result.csv' \
 ```
