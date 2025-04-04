@@ -1,4 +1,4 @@
-# Chinese-extractive-QA
+# chinese-extractive-QA
 ### Task Description - Chinese Extractive Question Answering
 This repository implements a two-stage Chinese extractive question answering (QA) system:
 1. **Paragraph Selection**: Given a question and multiple paragraphs, a multiple-choice model determines which paragraph is most relevant.
