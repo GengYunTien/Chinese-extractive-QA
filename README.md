@@ -17,6 +17,7 @@ This project uses pre-trained language models from Hugging Face as the backbone 
 * `paragraph-selection`: [hfl/chinese-bert-wwm-ext](https://huggingface.co/hfl/chinese-bert-wwm-ext)  
 * `span-selection (model1)`: [hfl/chinese-lert-large](https://huggingface.co/hfl/chinese-lert-large)  
 * `span-selection (model2)`: [hfl/chinese-macbert-large](https://huggingface.co/hfl/chinese-macbert-large)  
+
 All models were downloaded from Hugging Face Hub and further fine-tuned on the competition dataset.  
 The fine-tuned model weights are available via [Google Drive](https://drive.google.com/file/d/16Or96aFxP2rQiIs70bZKVe-3UBbnKIN5/view?usp=share_link).
 ```
